@@ -1,10 +1,11 @@
-import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { envs } from '../config/envs.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { PaginationDto } from '../common/index.js';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit {
@@ -62,7 +63,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new RpcException({
+        message: `Product with ID ${id} not found`,
+        statusCode: HttpStatus.NOT_FOUND
+      });
     }
 
     return product;
@@ -87,6 +91,7 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
 
     await this.findOne(id);    
 
+    // physical delete
     // return this.product.delete({
     //   where: { id }
     // });
